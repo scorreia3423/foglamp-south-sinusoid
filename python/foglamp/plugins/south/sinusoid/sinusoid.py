@@ -9,6 +9,7 @@
 import asyncio
 import copy
 import uuid
+import datetime
 
 from foglamp.common import logger
 from foglamp.plugins.common import utils
@@ -156,7 +157,9 @@ def plugin_start(handle):
     async def save_data():
         try:
             while True:
-                time_stamp = utils.local_timestamp()
+                # TODO: Use utils.local_timestamp() and this will be used once v1.3 debian package release
+                # https://github.com/foglamp/FogLAMP/commit/66dead988152cd3724eba6b4288b630cfa6a2e30
+                time_stamp = str(datetime.datetime.now(datetime.timezone.utc).astimezone()) # utils.local_timestamp()
                 data = {
                     'asset': 'sinusoid',
                     'timestamp': time_stamp,
