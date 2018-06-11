@@ -11,7 +11,7 @@ The 61st data point begins again at the beginning.
 .. code-block:: console
 
    data_points=[
-	0,
+	0.0,
 	0.104528463,
 	0.207911691,
 	0.309016994,
@@ -26,7 +26,7 @@ The 61st data point begins again at the beginning.
 	0.951056516,
 	0.978147601,
 	0.994521895,
-	1,
+	1.0,
 	0.994521895,
 	0.978147601,
 	0.951056516,
@@ -56,7 +56,7 @@ The 61st data point begins again at the beginning.
 	-0.951056516,
 	-0.978147601,
 	-0.994521895,
-	-1,
+	-1.0,
 	-0.994521895,
 	-0.978147601,
 	-0.951056516,
