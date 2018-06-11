@@ -9,6 +9,7 @@
 import asyncio
 import copy
 import uuid
+import datetime
 
 from foglamp.common import logger
 from foglamp.plugins.common import utils
@@ -82,7 +83,7 @@ def plugin_start(handle):
         TimeoutError
     """
     pi = [
-        0,
+        0.0,
         0.104528463,
         0.207911691,
         0.309016994,
@@ -97,7 +98,7 @@ def plugin_start(handle):
         0.951056516,
         0.978147601,
         0.994521895,
-        1,
+        1.0,
         0.994521895,
         0.978147601,
         0.951056516,
@@ -127,7 +128,7 @@ def plugin_start(handle):
         -0.951056516,
         -0.978147601,
         -0.994521895,
-        -1,
+        -1.0,
         -0.994521895,
         -0.978147601,
         -0.951056516,
@@ -156,7 +157,9 @@ def plugin_start(handle):
     async def save_data():
         try:
             while True:
-                time_stamp = utils.local_timestamp()
+                # TODO: Use utils.local_timestamp() and this will be used once v1.3 debian package release
+                # https://github.com/foglamp/FogLAMP/commit/66dead988152cd3724eba6b4288b630cfa6a2e30
+                time_stamp = str(datetime.datetime.now(datetime.timezone.utc).astimezone())  # utils.local_timestamp()
                 data = {
                     'asset': 'sinusoid',
                     'timestamp': time_stamp,
@@ -171,6 +174,9 @@ def plugin_start(handle):
                                           readings=data['readings'])
 
                 await asyncio.sleep(1/(int(handle['dataPointsPerSec']['value'])))
+
+        except asyncio.CancelledError:
+            pass
 
         except (Exception, RuntimeError) as ex:
             _LOGGER.exception("Sinusoid exception: {}".format(str(ex)))
