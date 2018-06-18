@@ -10,11 +10,19 @@ import pytest
 from python.foglamp.plugins.south.sinusoid import sinusoid
 
 __author__ = "Ashish Jabble"
-__copyright__ = "Copyright (c) 2017 OSIsoft, LLC"
+__copyright__ = "Copyright (c) 2018 Dianomic Systems"
 __license__ = "Apache 2.0"
 __version__ = "${VERSION}"
 
 config = sinusoid._DEFAULT_CONFIG
+
+def test_plugin_contract():
+    # Evaluates if the plugin has all the required methods
+    assert callable(getattr(sinusoid, 'plugin_info'))
+    assert callable(getattr(sinusoid, 'plugin_init'))
+    assert callable(getattr(sinusoid, 'plugin_start'))
+    assert callable(getattr(sinusoid, 'plugin_shutdown'))
+    assert callable(getattr(sinusoid, 'plugin_reconfigure'))
 
 
 def test_plugin_info():
