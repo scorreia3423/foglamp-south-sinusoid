@@ -77,16 +77,6 @@ The 61st data point begins again at the beginning.
 
 **Known issues:**
 
-
-- it does not work without restarting foglamp.
-
-  Once we have FOGL-1340 in debian release,  we need to update following code in `postinst` script for `enable_service`
-
-  .. code-block:: console
-
-   output=$(curl -X PUT http://localhost:8081/foglamp/schedule/$service_id/enable)
-   echo "sinusoid plugin installed and should be running."
-
 - For now this debian works with default configuration, it does not work if the Admin API config gets:
 
       1. host, port, https scheme changes
