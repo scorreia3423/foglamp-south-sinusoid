@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##--------------------------------------------------------------------
-## Copyright (c) 2018 OSIsoft, LLC
+## Copyright (c) 2018 Dianomic Systems
 ##
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 ## limitations under the License.
 ##--------------------------------------------------------------------
 ##
-## Author: Ivan Zoratti
+## Author: Ivan Zoratti, Ashish Jabble
 ##
 
 set -e
@@ -118,7 +118,7 @@ mkdir "${package_name}"
 echo -n "Populating the package and updating version file..."
 cd "${package_name}"
 cp -R ${GIT_ROOT}/packages/Debian/${architecture}/* .
-sed -i "s/Version: 0.0/Version: $version/g" DEBIAN/control
+sed -i "s/Version: 1.0.0/Version: $version/g" DEBIAN/control
 sed -i "s/Depends: foglamp/Depends: foglamp (=$foglamp_version)/g" DEBIAN/control
 
 mkdir -p usr/local/foglamp
