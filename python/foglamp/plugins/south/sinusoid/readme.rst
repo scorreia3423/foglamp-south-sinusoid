@@ -82,3 +82,5 @@ The 61st data point begins again at the beginning.
       1. host, port, https scheme changes
 
       2. authentication as mandatory
+
+      3. authentication as mandatory & allowPing as false

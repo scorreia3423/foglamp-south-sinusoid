@@ -61,7 +61,7 @@ def plugin_info():
 def plugin_init(config):
     """ Initialise the plugin.
     Args:
-        config: JSON configuration document for the South device configuration category
+        config: JSON configuration document for the South plugin configuration category
     Returns:
         data: JSON object to be used in future calls to the plugin
     Raises:
@@ -213,7 +213,7 @@ def plugin_reconfigure(handle, new_config):
 
 
 def _plugin_stop(handle):
-    """ Stops the plugin doing required cleanup, to be called prior to the South device service being shut down.
+    """ Stops the plugin doing required cleanup, to be called prior to the South plugin service being shut down.
 
     Args:
         handle: handle returned by the plugin initialisation call
@@ -224,7 +224,7 @@ def _plugin_stop(handle):
 
 
 def plugin_shutdown(handle):
-    """ Shutdowns the plugin doing required cleanup, to be called prior to the South device service being shut down.
+    """ Shutdowns the plugin doing required cleanup, to be called prior to the South plugin service being shut down.
 
     Args:
         handle: handle returned by the plugin initialisation call
