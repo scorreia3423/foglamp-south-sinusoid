@@ -82,7 +82,7 @@ def plugin_start(handle):
     Raises:
         TimeoutError
     """
-    pi = [
+    sine = [
         0.0,
         0.104528463,
         0.207911691,
@@ -152,7 +152,7 @@ def plugin_start(handle):
             if index >= 59:
                 index = -1
             index += 1
-            yield pi[index]
+            yield sine[index]
 
     async def save_data():
         try:
@@ -165,7 +165,7 @@ def plugin_start(handle):
                     'timestamp': time_stamp,
                     'key': str(uuid.uuid4()),
                     'readings': {
-                        "pi": next(generate_data())
+                        "sinusoid": next(generate_data())
                     }
                 }
 
