@@ -39,7 +39,7 @@ Finally, run the ``make_deb`` command:
     $ ./make_deb arm
     The package root directory is         : /home/pi/foglamp-south-sinusoid
     The FogLAMP south sinusoid version is : 1.0.0
-    The Package will be built in          : /home/pi/foglamp-south-sinusoid/packages/Debian/build
+    The package will be built in          : /home/pi/foglamp-south-sinusoid/packages/Debian/build
     The architecture is set as            : armhf
     The package name is                   : foglamp-south-sinusoid-1.0.0-armhf
 
@@ -68,7 +68,7 @@ If you execute the ``make_deb`` command again, you will see:
     $ ./make_deb arm
     The package root directory is         : /home/pi/foglamp-south-sinusoid
     The FogLAMP south sinusoid version is : 1.0.0
-    The Package will be built in          : /home/pi/foglamp-south-sinusoid/packages/Debian/build
+    The package will be built in          : /home/pi/foglamp-south-sinusoid/packages/Debian/build
     The architecture is set as            : armhf
     The package name is                   : foglamp-south-sinusoid-1.0.0-armhf
 
