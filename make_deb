@@ -81,7 +81,7 @@ if [[ "$architecture" == "none" ]]; then
 fi
 
 version=`cat ${GIT_ROOT}/VERSION.south.sinusoid | tr -d ' ' | grep 'foglamp_south_sinusoid_version=' | head -1 | sed -e 's/\(.*\)=\(.*\)/\2/g'`
-foglamp_version=`cat ${GIT_ROOT}/VERSION.south.sinusoid | tr -d ' ' | grep 'foglamp_version=' | head -1 | sed -e 's/\(.*\)=\(.*\)/\2/g'`
+foglamp_version=`cat ${GIT_ROOT}/VERSION.south.sinusoid | tr -d ' ' | grep 'foglamp_version' | head -1 | sed -e 's/\(.*\)version\(.*\)/\2/g'`
 BUILD_ROOT="${GIT_ROOT}/packages/Debian/build"
 
 # Final package name
@@ -117,9 +117,10 @@ mkdir "${package_name}"
 # First with files common to all pla
 echo -n "Populating the package and updating version file..."
 cd "${package_name}"
+find ${GIT_ROOT}/python | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 cp -R ${GIT_ROOT}/packages/Debian/${architecture}/* .
-sed -i "s/Version: 1.0.0/Version: $version/g" DEBIAN/control
-sed -i "s/Depends: foglamp/Depends: foglamp (=$foglamp_version)/g" DEBIAN/control
+sed -i "s/Version: 1.0.0/Version: ${version}/g" DEBIAN/control
+sed -i "s/Depends: foglamp/Depends: foglamp (${foglamp_version})/g" DEBIAN/control
 
 mkdir -p usr/local/foglamp
 cd usr/local/foglamp
