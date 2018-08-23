@@ -9,7 +9,6 @@
 import asyncio
 import copy
 import uuid
-import datetime
 
 from foglamp.common import logger
 from foglamp.plugins.common import utils
@@ -25,19 +24,28 @@ __version__ = "${VERSION}"
 
 _DEFAULT_CONFIG = {
     'plugin': {
-        'description': 'Sinusoid async plugin',
+        'description': 'Sinusoid Plugin',
         'type': 'string',
-        'default': 'sinusoid'
+        'default': 'sinusoid',
+        'readonly': 'true'
+    },
+    'assetName': {
+        'description': 'Name of Asset',
+        'type': 'string',
+        'default': 'sinusoid',
+        'order': '1'
     },
     'dataPointsPerSec': {
         'description': 'Data points per second',
         'type': 'integer',
-        'default': "1"
+        'default': '1',
+        'order': '2'
     }
 }
 
 _LOGGER = logger.setup(__name__, level=20)
 index = -1
+_task = None
 
 
 def plugin_info():
@@ -82,6 +90,7 @@ def plugin_start(handle):
     Raises:
         TimeoutError
     """
+    global _task
     sine = [
         0.0,
         0.104528463,
@@ -157,11 +166,9 @@ def plugin_start(handle):
     async def save_data():
         try:
             while True:
-                # TODO: Use utils.local_timestamp() and this will be used once v1.3 debian package release
-                # https://github.com/foglamp/FogLAMP/commit/66dead988152cd3724eba6b4288b630cfa6a2e30
-                time_stamp = str(datetime.datetime.now(datetime.timezone.utc).astimezone())  # utils.local_timestamp()
+                time_stamp = utils.local_timestamp()
                 data = {
-                    'asset': 'sinusoid',
+                    'asset': handle['assetName']['value'],
                     'timestamp': time_stamp,
                     'key': str(uuid.uuid4()),
                     'readings': {
@@ -173,7 +180,7 @@ def plugin_start(handle):
                                           timestamp=data['timestamp'], key=data['key'],
                                           readings=data['readings'])
 
-                await asyncio.sleep(1/(int(handle['dataPointsPerSec']['value'])))
+                await asyncio.sleep(1 / (int(handle['dataPointsPerSec']['value'])))
 
         except asyncio.CancelledError:
             pass
@@ -182,7 +189,7 @@ def plugin_start(handle):
             _LOGGER.exception("Sinusoid exception: {}".format(str(ex)))
             raise exceptions.DataRetrievalError(ex)
 
-    asyncio.ensure_future(save_data())
+    _task = asyncio.ensure_future(save_data())
 
 
 def plugin_reconfigure(handle, new_config):
@@ -200,8 +207,8 @@ def plugin_reconfigure(handle, new_config):
     diff = utils.get_diff(handle, new_config)
 
     # Plugin should re-initialize and restart if key configuration is changed
-    if 'dataPointsPerSec' in diff:
-        _plugin_stop(handle)
+    if 'dataPointsPerSec' in diff or 'assetName' in diff:
+        plugin_shutdown(handle)
         new_handle = plugin_init(new_config)
         new_handle['restart'] = 'yes'
         _LOGGER.info("Restarting Sinusoid plugin due to change in configuration key [{}]".format(', '.join(diff)))
@@ -212,24 +219,17 @@ def plugin_reconfigure(handle, new_config):
     return new_handle
 
 
-def _plugin_stop(handle):
-    """ Stops the plugin doing required cleanup, to be called prior to the South plugin service being shut down.
-
-    Args:
-        handle: handle returned by the plugin initialisation call
-    Returns:
-        None
-    """
-    _LOGGER.info('sinusoid disconnected.')
-
-
 def plugin_shutdown(handle):
     """ Shutdowns the plugin doing required cleanup, to be called prior to the South plugin service being shut down.
 
     Args:
         handle: handle returned by the plugin initialisation call
     Returns:
-        plugin stop
+        plugin shutdown
     """
-    _plugin_stop(handle)
+    global _task
+    if _task is not None:
+        _task.cancel()
+        _task = None
+
     _LOGGER.info('sinusoid plugin shut down.')
