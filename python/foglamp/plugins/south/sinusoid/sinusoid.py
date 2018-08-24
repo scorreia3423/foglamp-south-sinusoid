@@ -25,14 +25,22 @@ __version__ = "${VERSION}"
 
 _DEFAULT_CONFIG = {
     'plugin': {
-        'description': 'Sinusoid async plugin',
+        'description': 'Sinusoid Plugin',
         'type': 'string',
-        'default': 'sinusoid'
+        'default': 'sinusoid',
+        'readonly': 'true'
+    },
+    'assetName': {
+        'description': 'Name of Asset',
+        'type': 'string',
+        'default': 'sinusoid',
+        'order': '1'
     },
     'dataPointsPerSec': {
         'description': 'Data points per second',
         'type': 'integer',
-        'default': "1"
+        'default': '1',
+        'order': '2'
     }
 }
 
@@ -161,7 +169,7 @@ def plugin_start(handle):
                 # https://github.com/foglamp/FogLAMP/commit/66dead988152cd3724eba6b4288b630cfa6a2e30
                 time_stamp = str(datetime.datetime.now(datetime.timezone.utc).astimezone())  # utils.local_timestamp()
                 data = {
-                    'asset': 'sinusoid',
+                    'asset': handle['assetName']['value'],
                     'timestamp': time_stamp,
                     'key': str(uuid.uuid4()),
                     'readings': {
@@ -173,7 +181,7 @@ def plugin_start(handle):
                                           timestamp=data['timestamp'], key=data['key'],
                                           readings=data['readings'])
 
-                await asyncio.sleep(1/(int(handle['dataPointsPerSec']['value'])))
+                await asyncio.sleep(1 / (int(handle['dataPointsPerSec']['value'])))
 
         except asyncio.CancelledError:
             pass
