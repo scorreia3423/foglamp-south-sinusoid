@@ -45,6 +45,7 @@ _DEFAULT_CONFIG = {
 
 _LOGGER = logger.setup(__name__, level=20)
 index = -1
+_task = None
 
 
 def plugin_info():
@@ -89,6 +90,7 @@ def plugin_start(handle):
     Raises:
         TimeoutError
     """
+    global _task
     sine = [
         0.0,
         0.104528463,
@@ -187,7 +189,7 @@ def plugin_start(handle):
             _LOGGER.exception("Sinusoid exception: {}".format(str(ex)))
             raise exceptions.DataRetrievalError(ex)
 
-    asyncio.ensure_future(save_data())
+    _task = asyncio.ensure_future(save_data())
 
 
 def plugin_reconfigure(handle, new_config):
@@ -206,6 +208,7 @@ def plugin_reconfigure(handle, new_config):
 
     # Plugin should re-initialize and restart if key configuration is changed
     if 'dataPointsPerSec' in diff or 'assetName' in diff:
+        plugin_shutdown(handle)
         new_handle = plugin_init(new_config)
         new_handle['restart'] = 'yes'
         _LOGGER.info("Restarting Sinusoid plugin due to change in configuration key [{}]".format(', '.join(diff)))
@@ -224,4 +227,9 @@ def plugin_shutdown(handle):
     Returns:
         plugin shutdown
     """
+    global _task
+    if _task is not None:
+        _task.cancel()
+        _task = None
+
     _LOGGER.info('sinusoid plugin shut down.')
