@@ -16,6 +16,7 @@ __version__ = "${VERSION}"
 
 config = sinusoid._DEFAULT_CONFIG
 
+
 def test_plugin_contract():
     # Evaluates if the plugin has all the required methods
     assert callable(getattr(sinusoid, 'plugin_info'))
@@ -50,15 +51,7 @@ def test_plugin_reconfigure():
     pass
 
 
-def test__plugin_stop():
-    with patch.object(sinusoid._LOGGER, 'info') as patch_logger_info:
-        sinusoid._plugin_stop(config)
-    patch_logger_info.assert_called_once_with('sinusoid disconnected.')
-
-
 def test_plugin_shutdown():
-    with patch.object(sinusoid, "_plugin_stop", return_value="") as patch_stop:
-        with patch.object(sinusoid._LOGGER, 'info') as patch_logger_info:
-            sinusoid.plugin_shutdown(config)
-        patch_logger_info.assert_called_once_with('sinusoid plugin shut down.')
-    patch_stop.assert_called_once_with(config)
+    with patch.object(sinusoid._LOGGER, 'info') as patch_logger_info:
+        sinusoid.plugin_shutdown(config)
+    patch_logger_info.assert_called_once_with('sinusoid plugin shut down.')

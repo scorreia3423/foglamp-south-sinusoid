@@ -9,7 +9,6 @@
 import asyncio
 import copy
 import uuid
-import datetime
 
 from foglamp.common import logger
 from foglamp.plugins.common import utils
@@ -165,9 +164,7 @@ def plugin_start(handle):
     async def save_data():
         try:
             while True:
-                # TODO: Use utils.local_timestamp() and this will be used once v1.3 debian package release
-                # https://github.com/foglamp/FogLAMP/commit/66dead988152cd3724eba6b4288b630cfa6a2e30
-                time_stamp = str(datetime.datetime.now(datetime.timezone.utc).astimezone())  # utils.local_timestamp()
+                time_stamp = utils.local_timestamp()
                 data = {
                     'asset': handle['assetName']['value'],
                     'timestamp': time_stamp,
@@ -208,8 +205,7 @@ def plugin_reconfigure(handle, new_config):
     diff = utils.get_diff(handle, new_config)
 
     # Plugin should re-initialize and restart if key configuration is changed
-    if 'dataPointsPerSec' in diff:
-        _plugin_stop(handle)
+    if 'dataPointsPerSec' in diff or 'assetName' in diff:
         new_handle = plugin_init(new_config)
         new_handle['restart'] = 'yes'
         _LOGGER.info("Restarting Sinusoid plugin due to change in configuration key [{}]".format(', '.join(diff)))
@@ -220,24 +216,12 @@ def plugin_reconfigure(handle, new_config):
     return new_handle
 
 
-def _plugin_stop(handle):
-    """ Stops the plugin doing required cleanup, to be called prior to the South plugin service being shut down.
-
-    Args:
-        handle: handle returned by the plugin initialisation call
-    Returns:
-        None
-    """
-    _LOGGER.info('sinusoid disconnected.')
-
-
 def plugin_shutdown(handle):
     """ Shutdowns the plugin doing required cleanup, to be called prior to the South plugin service being shut down.
 
     Args:
         handle: handle returned by the plugin initialisation call
     Returns:
-        plugin stop
+        plugin shutdown
     """
-    _plugin_stop(handle)
     _LOGGER.info('sinusoid plugin shut down.')
