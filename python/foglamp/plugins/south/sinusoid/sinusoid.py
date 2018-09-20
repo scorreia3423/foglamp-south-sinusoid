@@ -9,6 +9,7 @@
 import asyncio
 import copy
 import uuid
+import logging
 
 from foglamp.common import logger
 from foglamp.plugins.common import utils
@@ -43,7 +44,7 @@ _DEFAULT_CONFIG = {
     }
 }
 
-_LOGGER = logger.setup(__name__, level=20)
+_LOGGER = logger.setup(__name__, level=logging.INFO)
 index = -1
 _task = None
 
@@ -180,11 +181,14 @@ def plugin_start(handle):
                                           timestamp=data['timestamp'], key=data['key'],
                                           readings=data['readings'])
 
-                await asyncio.sleep(1 / (int(handle['dataPointsPerSec']['value'])))
-
+                try:
+                    await asyncio.sleep(1 / (float(handle['dataPointsPerSec']['value'])))
+                except ZeroDivisionError:
+                    _LOGGER.warning('Data points per second must be greater than 0, defaulting to 1')
+                    handle['dataPointsPerSec']['value'] = '1'
+                    await asyncio.sleep(1)
         except asyncio.CancelledError:
             pass
-
         except (Exception, RuntimeError) as ex:
             _LOGGER.exception("Sinusoid exception: {}".format(str(ex)))
             raise exceptions.DataRetrievalError(ex)
