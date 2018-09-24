@@ -11,6 +11,7 @@ import copy
 import uuid
 import logging
 import time
+from threading import Thread
 
 from foglamp.common import logger
 from foglamp.plugins.common import utils
@@ -170,9 +171,10 @@ def plugin_start(handle):
             time_time = time.time
             start = time_time()
             recs = int(handle['dataPointsPerSec']['value'])
-            period = 1.0 / recs
+            period = round(1.0 / recs, len(str(recs))+1)
             while True:
-                if (time_time() - start) > period:
+                now = time.time()
+                if (now - start) > period:
                     start += period
                     time_stamp = utils.local_timestamp()
                     data = {
@@ -192,8 +194,14 @@ def plugin_start(handle):
             _LOGGER.exception("Sinusoid exception: {}".format(str(ex)))
             raise exceptions.DataRetrievalError(ex)
 
-    _task = asyncio.ensure_future(save_data())
+    def run_task(loop):
+        global _task
+        asyncio.set_event_loop(loop)
+        _task = asyncio.ensure_future(save_data(), loop=loop)
 
+    new_loop = asyncio.get_event_loop()
+    t = Thread(target=run_task, args=(new_loop,))
+    t.start()
 
 def plugin_reconfigure(handle, new_config):
     """ Reconfigures the plugin
