@@ -10,6 +10,7 @@ import asyncio
 import copy
 import uuid
 import logging
+import time
 
 from foglamp.common import logger
 from foglamp.plugins.common import utils
@@ -166,27 +167,25 @@ def plugin_start(handle):
 
     async def save_data():
         try:
+            time_time = time.time
+            start = time_time()
+            recs = int(handle['dataPointsPerSec']['value'])
+            period = 1.0 / recs
             while True:
-                time_stamp = utils.local_timestamp()
-                data = {
-                    'asset': handle['assetName']['value'],
-                    'timestamp': time_stamp,
-                    'key': str(uuid.uuid4()),
-                    'readings': {
-                        "sinusoid": next(generate_data())
+                if (time_time() - start) > period:
+                    start += period
+                    time_stamp = utils.local_timestamp()
+                    data = {
+                        'asset': handle['assetName']['value'],
+                        'timestamp': time_stamp,
+                        'key': str(uuid.uuid4()),
+                        'readings': {
+                            "sinusoid": next(generate_data())
+                        }
                     }
-                }
-
-                await Ingest.add_readings(asset='{}'.format(data['asset']),
-                                          timestamp=data['timestamp'], key=data['key'],
-                                          readings=data['readings'])
-
-                try:
-                    await asyncio.sleep(1 / (float(handle['dataPointsPerSec']['value'])))
-                except ZeroDivisionError:
-                    _LOGGER.warning('Data points per second must be greater than 0, defaulting to 1')
-                    handle['dataPointsPerSec']['value'] = '1'
-                    await asyncio.sleep(1)
+                    await Ingest.add_readings(asset='{}'.format(data['asset']),
+                                              timestamp=data['timestamp'], key=data['key'],
+                                              readings=data['readings'])
         except asyncio.CancelledError:
             pass
         except (Exception, RuntimeError) as ex:
