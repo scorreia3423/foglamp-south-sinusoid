@@ -10,8 +10,7 @@ import asyncio
 import copy
 import uuid
 import logging
-import time
-from threading import Thread
+from threading import Timer
 
 from foglamp.common import logger
 from foglamp.plugins.common import utils
@@ -168,28 +167,18 @@ def plugin_start(handle):
 
     async def save_data():
         try:
-            time_time = time.time
-            start = time_time()
-            recs = int(handle['dataPointsPerSec']['value'])
-            period = round(1.0 / recs, len(str(recs))+1)
-            while True:
-                now = time.time()
-                if (now - start) > period:
-                    start += period
-                    time_stamp = utils.local_timestamp()
-                    data = {
-                        'asset': handle['assetName']['value'],
-                        'timestamp': time_stamp,
-                        'key': str(uuid.uuid4()),
-                        'readings': {
-                            "sinusoid": next(generate_data())
-                        }
-                    }
-                    await Ingest.add_readings(asset='{}'.format(data['asset']),
-                                              timestamp=data['timestamp'], key=data['key'],
-                                              readings=data['readings'])
-        except asyncio.CancelledError:
-            pass
+            time_stamp = utils.local_timestamp()
+            data = {
+                'asset': handle['assetName']['value'],
+                'timestamp': time_stamp,
+                'key': str(uuid.uuid4()),
+                'readings': {
+                    "sinusoid": next(generate_data())
+                }
+            }
+            await Ingest.add_readings(asset='{}'.format(data['asset']),
+                                      timestamp=data['timestamp'], key=data['key'],
+                                      readings=data['readings'])
         except (Exception, RuntimeError) as ex:
             _LOGGER.exception("Sinusoid exception: {}".format(str(ex)))
             raise exceptions.DataRetrievalError(ex)
@@ -197,11 +186,23 @@ def plugin_start(handle):
     def run_task(loop):
         global _task
         asyncio.set_event_loop(loop)
-        _task = asyncio.ensure_future(save_data(), loop=loop)
+        asyncio.ensure_future(save_data(), loop=loop)
+        # Chain next iteration
+        _task = Timer(period, run_task, args=(loop, ))
+        _task.start()
 
-    new_loop = asyncio.get_event_loop()
-    t = Thread(target=run_task, args=(new_loop,))
-    t.start()
+    try:
+        recs = int(handle['dataPointsPerSec']['value'])
+        period = round(1.0 / recs, len(str(recs)) + 1)
+    except ZeroDivisionError:
+        _LOGGER.warning('Data points per second must be greater than 0, defaulting to 1')
+        period = 1.0
+
+    loop = asyncio.get_event_loop()
+    start = loop.time()
+    # Start first time
+    _task = Timer(period, run_task, args=(loop, ))
+    _task.start()
 
 def plugin_reconfigure(handle, new_config):
     """ Reconfigures the plugin
@@ -242,5 +243,4 @@ def plugin_shutdown(handle):
     if _task is not None:
         _task.cancel()
         _task = None
-
     _LOGGER.info('sinusoid plugin shut down.')
