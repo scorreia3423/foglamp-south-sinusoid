@@ -10,7 +10,7 @@ import asyncio
 import copy
 import uuid
 import logging
-from threading import Timer
+from threading import Timer, Event
 
 from foglamp.common import logger
 from foglamp.plugins.common import utils
@@ -48,6 +48,7 @@ _DEFAULT_CONFIG = {
 _LOGGER = logger.setup(__name__, level=logging.INFO)
 index = -1
 _task = None
+should_stop = Event()
 
 
 def plugin_info():
@@ -92,7 +93,7 @@ def plugin_start(handle):
     Raises:
         TimeoutError
     """
-    global _task
+    global _task, should_stop
     sine = [
         0.0,
         0.104528463,
@@ -179,17 +180,21 @@ def plugin_start(handle):
             await Ingest.add_readings(asset='{}'.format(data['asset']),
                                       timestamp=data['timestamp'], key=data['key'],
                                       readings=data['readings'])
+        except asyncio.CancelledError:
+            pass
         except (Exception, RuntimeError) as ex:
             _LOGGER.exception("Sinusoid exception: {}".format(str(ex)))
             raise exceptions.DataRetrievalError(ex)
 
     def run_task(loop):
-        global _task
+        global _task, should_stop
+        if should_stop.is_set():
+            return
         asyncio.set_event_loop(loop)
-        asyncio.ensure_future(save_data(), loop=loop)
+        _task = asyncio.ensure_future(save_data(), loop=loop)
         # Chain next iteration
-        _task = Timer(period, run_task, args=(loop, ))
-        _task.start()
+        t = Timer(period, run_task, args=(loop, ))
+        t.start()
 
     try:
         recs = int(handle['dataPointsPerSec']['value'])
@@ -200,9 +205,10 @@ def plugin_start(handle):
 
     loop = asyncio.get_event_loop()
     start = loop.time()
+    should_stop.clear()
     # Start first time
-    _task = Timer(period, run_task, args=(loop, ))
-    _task.start()
+    t = Timer(period, run_task, args=(loop, ))
+    t.start()
 
 def plugin_reconfigure(handle, new_config):
     """ Reconfigures the plugin
@@ -239,8 +245,9 @@ def plugin_shutdown(handle):
     Returns:
         plugin shutdown
     """
-    global _task
+    global _task, should_stop
     if _task is not None:
         _task.cancel()
         _task = None
+        should_stop.set()
     _LOGGER.info('sinusoid plugin shut down.')
