@@ -34,13 +34,15 @@ _DEFAULT_CONFIG = {
         'description': 'Name of Asset',
         'type': 'string',
         'default': 'sinusoid',
-        'order': '1'
+        'order': '1',
+        'displayName': 'Asset name'
     },
     'dataPointsPerSec': {
         'description': 'Data points per second',
         'type': 'integer',
         'default': '1',
-        'order': '2'
+        'order': '2',
+        'displayName': 'Data points per second'
     }
 }
 
