@@ -180,7 +180,7 @@ def plugin_start(handle):
             await Ingest.add_readings(asset='{}'.format(data['asset']),
                                       timestamp=data['timestamp'], key=data['key'],
                                       readings=data['readings'])
-        except asyncio.CancelledError:
+        except (RuntimeWarning, asyncio.CancelledError):
             pass
         except (Exception, RuntimeError) as ex:
             _LOGGER.exception("Sinusoid exception: {}".format(str(ex)))
@@ -192,10 +192,10 @@ def plugin_start(handle):
         if should_stop.is_set():
             return
         asyncio.set_event_loop(loop)
-        _task = asyncio.ensure_future(save_data(), loop=loop)
+        asyncio.ensure_future(save_data(), loop=loop)
         # Chain next iteration
-        t = Timer(period, run_task, args=(loop, ))
-        t.start()
+        _task = Timer(period, run_task, args=(loop, ))
+        _task.start()
 
     try:
         recs = int(handle['dataPointsPerSec']['value'])
@@ -208,8 +208,8 @@ def plugin_start(handle):
     start = loop.time()
     should_stop.clear()
     # Start first time
-    t = Timer(period, run_task, args=(loop, ))
-    t.start()
+    _task = Timer(period, run_task, args=(loop, ))
+    _task.start()
 
 def plugin_reconfigure(handle, new_config):
     """ Reconfigures the plugin
