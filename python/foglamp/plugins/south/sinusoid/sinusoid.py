@@ -10,6 +10,7 @@ import asyncio
 import copy
 import uuid
 import logging
+import time
 from threading import Timer, Event, active_count
 
 from foglamp.common import logger
@@ -188,7 +189,7 @@ def plugin_start(handle):
 
     def run_task(loop):
         global _task, should_stop
-        # _LOGGER.warning('>>>>>>> No. of active threads: %d, time: %s', active_count(), time.time())
+        _LOGGER.debug('No. of active threads: %d, time: %s', active_count(), time.time())
         if should_stop.is_set():
             return
         asyncio.set_event_loop(loop)
