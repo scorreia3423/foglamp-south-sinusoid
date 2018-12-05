@@ -9,6 +9,8 @@
 import asyncio
 import copy
 import uuid
+import json
+import datetime
 import logging
 
 from foglamp.common import logger
@@ -49,7 +51,81 @@ _DEFAULT_CONFIG = {
 _LOGGER = logger.setup(__name__, level=logging.INFO)
 index = -1
 _task = None
+_LOGGER.info("sinusoid python module start")
 
+sine = [
+        0.0,
+        0.104528463,
+        0.207911691,
+        0.309016994,
+        0.406736643,
+        0.5,
+        0.587785252,
+        0.669130606,
+        0.743144825,
+        0.809016994,
+        0.866025404,
+        0.913545458,
+        0.951056516,
+        0.978147601,
+        0.994521895,
+        1.0,
+        0.994521895,
+        0.978147601,
+        0.951056516,
+        0.913545458,
+        0.866025404,
+        0.809016994,
+        0.743144825,
+        0.669130606,
+        0.587785252,
+        0.5,
+        0.406736643,
+        0.309016994,
+        0.207911691,
+        0.104528463,
+        1.22515E-16,
+        -0.104528463,
+        -0.207911691,
+        -0.309016994,
+        -0.406736643,
+        -0.5,
+        -0.587785252,
+        -0.669130606,
+        -0.743144825,
+        -0.809016994,
+        -0.866025404,
+        -0.913545458,
+        -0.951056516,
+        -0.978147601,
+        -0.994521895,
+        -1.0,
+        -0.994521895,
+        -0.978147601,
+        -0.951056516,
+        -0.913545458,
+        -0.866025404,
+        -0.809016994,
+        -0.743144825,
+        -0.669130606,
+        -0.587785252,
+        -0.5,
+        -0.406736643,
+        -0.309016994,
+        -0.207911691,
+        -0.104528463
+    ]
+
+index = -1
+
+def generate_data():
+    global index
+    while index >= -1:
+        # index exceeds, reset to default
+        if index >= 59:
+            index = -1
+        index += 1
+        yield sine[index]
 
 def plugin_info():
     """ Returns information about the plugin.
@@ -59,10 +135,11 @@ def plugin_info():
     Raises:
     """
 
+    _LOGGER.info("sinusoid python: plugin_info called")
     return {
         'name': 'Sinusoid plugin',
         'version': '1.0',
-        'mode': 'async',
+        'mode': 'poll',
         'type': 'south',
         'interface': '1.0',
         'config': _DEFAULT_CONFIG
@@ -78,6 +155,30 @@ def plugin_init(config):
     Raises:
     """
     data = copy.deepcopy(config)
+    return data
+
+
+def plugin_poll(handle):
+    """ Extracts data from the sensor and returns it in a JSON document as a Python dict.
+    Available for async mode only.
+    Args:
+        handle: handle returned by the plugin initialisation call
+    Returns:
+        returns a sensor reading in a JSON document, as a Python dict, if it is available
+        None - If no reading is available
+    Raises:
+        TimeoutError
+    """
+    try:
+        #_LOGGER.info("Sinusoid period: {}".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')))
+        time_stamp = utils.local_timestamp()
+        data = {'asset_code': 'sinusoid', 'user_ts': time_stamp, 'read_key': str(uuid.uuid4()), 'reading': {"pi": next(generate_data())}}
+
+    except (Exception, RuntimeError) as ex:
+        _LOGGER.exception("Sinusoid exception: {}".format(str(ex)))
+        raise exceptions.DataRetrievalError(ex)
+
+    #_LOGGER.info("Sinusoid DATA: {}---{}".format(data, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')))
     return data
 
 
