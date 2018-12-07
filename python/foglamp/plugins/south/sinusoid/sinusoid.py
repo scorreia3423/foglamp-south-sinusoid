@@ -172,7 +172,7 @@ def plugin_poll(handle):
     try:
         #_LOGGER.info("Sinusoid period: {}".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')))
         time_stamp = utils.local_timestamp()
-        data = {'asset_code': 'sinusoid', 'user_ts': time_stamp, 'read_key': str(uuid.uuid4()), 'reading': {"pi": next(generate_data())}}
+        data = {'asset': 'sinusoid', 'timestamp': time_stamp, 'key': str(uuid.uuid4()), 'readings': {"pi": next(generate_data())}}
 
     except (Exception, RuntimeError) as ex:
         _LOGGER.exception("Sinusoid exception: {}".format(str(ex)))
