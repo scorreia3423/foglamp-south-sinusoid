@@ -21,16 +21,16 @@ def test_plugin_contract():
     # Evaluates if the plugin has all the required methods
     assert callable(getattr(sinusoid, 'plugin_info'))
     assert callable(getattr(sinusoid, 'plugin_init'))
-    assert callable(getattr(sinusoid, 'plugin_start'))
+    assert callable(getattr(sinusoid, 'plugin_poll'))
     assert callable(getattr(sinusoid, 'plugin_shutdown'))
     assert callable(getattr(sinusoid, 'plugin_reconfigure'))
 
 
 def test_plugin_info():
     assert sinusoid.plugin_info() == {
-        'name': 'Sinusoid plugin',
-        'version': '1.0',
-        'mode': 'async',
+        'name': 'Sinusoid Poll plugin',
+        'version': '2.0.0',
+        'mode': 'poll',
         'type': 'south',
         'interface': '1.0',
         'config': config
@@ -42,7 +42,7 @@ def test_plugin_init():
 
 
 @pytest.mark.skip(reason="To be implemented")
-def test_plugin_start():
+def test_plugin_poll():
     pass
 
 
